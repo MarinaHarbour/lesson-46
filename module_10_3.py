@@ -11,9 +11,10 @@ class Bank:
     def deposit(self):
         for transaction in range(100):
             replenishment = random.randint(50, 500)
-            with self.lock:
-                self.balance += replenishment
-                print(f"Пополнение: {replenishment}. Баланс: {self.balance}")
+            self.balance += replenishment
+            print(f"Пополнение: {replenishment}. Баланс: {self.balance}")
+            if self.balance >= 500 and self.lock.locked():
+                self.lock.release()
 
             time.sleep(0.001)
 
@@ -21,13 +22,13 @@ class Bank:
         for transaction in range(100):
             withdrawal = random.randint(50, 500)
             print(f"Запрос на {withdrawal}")
-
-            with self.lock:
-                if withdrawal <= self.balance:
-                    self.balance -= withdrawal
-                    print(f"Снятие: {withdrawal}. Баланс: {self.balance}")
-                else:
+            if withdrawal <= self.balance:
+                self.balance -= withdrawal
+                print(f"Снятие: {withdrawal}. Баланс: {self.balance}")
+            else:
+                if withdrawal > self.balance:
                     print("Запрос отклонён, недостаточно средств")
+                    self.lock.acquire()
 
             time.sleep(0.001)
 
